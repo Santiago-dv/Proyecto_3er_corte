@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Interpolación Lineal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Calculadora de Interpolación Lineal</h1>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        Ingreso de Datos
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="x-input" class="form-label">Valor X:</label>
+                            <input type="number" class="form-control" id="x-input" step="any">
+                        </div>
+                        <div class="mb-3">
+                            <label for="y-input" class="form-label">Valor Y:</label>
+                            <input type="number" class="form-control" id="y-input" step="any">
+                        </div>
+                        <button id="agregar-btn" class="btn btn-primary">Agregar Punto</button>
+                        <button id="limpiar-btn" class="btn btn-secondary ms-2">Limpiar Datos</button>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        Calcular Interpolación
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="x-calcular" class="form-label">Valor X a interpolar:</label>
+                            <input type="number" class="form-control" id="x-calcular" step="any">
+                        </div>
+                        <div class="mb-3" id="funcion-real-container" style="display: none;">
+                            <label for="funcion-real" class="form-label">Función real (opcional):</label>
+                            <input type="text" class="form-control" id="funcion-real" placeholder="Ej: Math.sin(x)">
+                        </div>
+                        <button id="calcular-btn" class="btn btn-success">Calcular</button>
+                        <button id="toggle-funcion-btn" class="btn btn-outline-secondary ms-2">+ Función Real</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        Resultados
+                    </div>
+                    <div class="card-body">
+                        <div id="resultados">
+                            <p>Ingrese al menos dos puntos para comenzar.</p>
+                        </div>
+                        <canvas id="grafico"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        Puntos Ingresados
+                    </div>
+                    <div class="card-body">
+                        <table class="table" id="tabla-puntos">
+                            <thead>
+                                <tr>
+                                    <th>X</th>
+                                    <th>Y</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="puntos-body">
+                                <!-- Puntos se agregarán aquí dinámicamente -->
+                            </tbody>
+                        </table>
+                        <button id="exportar-btn" class="btn btn-info">Exportar a CSV</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+    <script src="graficos.js"></script>
+</body>
+</html>
