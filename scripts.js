@@ -1,199 +1,173 @@
-class CalculadoraInterpolacion {
-    constructor() {
-        this.puntos = [];
-    }
+// Calculator menu button interaction
+const calcButtons = document.querySelectorAll('nav.menu button');
+const linearInputs = document.getElementById('linearInputs');
+const lagrangeInputs = document.getElementById('lagrangeInputs');
+const newtonInputs = document.getElementById('newtonInputs');
 
-    // Agrega un punto al conjunto de datos
-    agregarPunto(x, y) {
-        this.puntos.push({x, y});
-        this.puntos.sort((a, b) => a.x - b.x); // Ordenar por x
-    }
-
-    // Calcula el valor interpolado para un x dado
-    calcularInterpolacion(x) {
-        if (this.puntos.length < 2) {
-            throw new Error("Se necesitan al menos 2 puntos para interpolación");
-        }
-
-        // Encontrar los puntos adyacentes
-        let x0, x1, y0, y1;
-        for (let i = 0; i < this.puntos.length - 1; i++) {
-            if (x >= this.puntos[i].x && x <= this.puntos[i+1].x) {
-                x0 = this.puntos[i].x;
-                x1 = this.puntos[i+1].x;
-                y0 = this.puntos[i].y;
-                y1 = this.puntos[i+1].y;
-                break;
-            }
-        }
-
-        // Si x está fuera del rango, usar los extremos
-        if (x < this.puntos[0].x) {
-            x0 = this.puntos[0].x;
-            x1 = this.puntos[1].x;
-            y0 = this.puntos[0].y;
-            y1 = this.puntos[1].y;
-        } else if (x > this.puntos[this.puntos.length-1].x) {
-            x0 = this.puntos[this.puntos.length-2].x;
-            x1 = this.puntos[this.puntos.length-1].x;
-            y0 = this.puntos[this.puntos.length-2].y;
-            y1 = this.puntos[this.puntos.length-1].y;
-        }
-
-        // Fórmula de interpolación lineal: y = y0 + ((y1-y0)/(x1-x0))*(x-x0)
-        return y0 + ((y1 - y0) / (x1 - x0)) * (x - x0);
-    }
-
-    // Calcula el error relativo si se proporciona la función real
-    calcularError(x, funcionReal) {
-        const yInterpolado = this.calcularInterpolacion(x);
-        const yReal = funcionReal(x);
-        return Math.abs((yReal - yInterpolado) / yReal) * 100;
-    }
-
-    // Exportar datos a CSV
-    exportarCSV() {
-        let csv = "x,y\n";
-        this.puntos.forEach(punto => {
-            csv += `${punto.x},${punto.y}\n`;
-        });
-        return csv;
-    }
-}
-// Instancias globales
-const calculadora = new CalculadoraInterpolacion();
-const grafico = new GraficoInterpolacion();
-
-// Función para actualizar la tabla de puntos
-function actualizarTablaPuntos() {
-    const tbody = document.getElementById('puntos-body');
-    tbody.innerHTML = '';
-    
-    calculadora.puntos.forEach((punto, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${punto.x}</td>
-            <td>${punto.y}</td>
-            <td>
-                <button class="btn btn-sm btn-danger eliminar-punto" data-index="${index}">Eliminar</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-
-    // Agregar eventos a los botones eliminar
-    document.querySelectorAll('.eliminar-punto').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const index = parseInt(this.getAttribute('data-index'));
-            calculadora.puntos.splice(index, 1);
-            actualizarTablaPuntos();
-            grafico.actualizarGrafico(calculadora.puntos);
-            actualizarEstadoCalculo();
-        });
-    });
-}
-
-// Función para actualizar el área de resultados
-function actualizarResultados(texto, esError = false) {
-    const resultadosDiv = document.getElementById('resultados');
-    resultadosDiv.innerHTML = texto;
-    resultadosDiv.style.color = esError ? 'red' : 'black';
-    resultadosDiv.style.fontWeight = esError ? 'bold' : 'normal';
-}
-
-// Función para actualizar el estado del botón de cálculo
-function actualizarEstadoCalculo() {
-    const calcularBtn = document.getElementById('calcular-btn');
-    calcularBtn.disabled = calculadora.puntos.length < 2;
-}
-
-// Eventos
-document.getElementById('agregar-btn').addEventListener('click', function() {
-    const x = parseFloat(document.getElementById('x-input').value);
-    const y = parseFloat(document.getElementById('y-input').value);
-    
-    if (isNaN(x) || isNaN(y)) {
-        actualizarResultados('Por favor ingrese valores numéricos válidos para X e Y', true);
-        return;
-    }
-    
-    calculadora.agregarPunto(x, y);
-    document.getElementById('x-input').value = '';
-    document.getElementById('y-input').value = '';
-    document.getElementById('x-input').focus();
-    
-    actualizarTablaPuntos();
-    grafico.actualizarGrafico(calculadora.puntos);
-    actualizarEstadoCalculo();
-    actualizarResultados(`Punto (${x}, ${y}) agregado correctamente.`);
-});
-
-document.getElementById('calcular-btn').addEventListener('click', function() {
-    const xCalcular = parseFloat(document.getElementById('x-calcular').value);
-    const funcionRealInput = document.getElementById('funcion-real').value;
-    
-    if (isNaN(xCalcular)) {
-        actualizarResultados('Por favor ingrese un valor X válido para interpolar', true);
-        return;
-    }
-    
-    try {
-        const yInterpolado = calculadora.calcularInterpolacion(xCalcular);
-        let mensaje = `Para x = ${xCalcular}, el valor interpolado es y ≈ ${yInterpolado.toFixed(4)}`;
-        
-        if (funcionRealInput) {
-            try {
-                const funcionReal = new Function('x', `return ${funcionRealInput}`);
-                const error = calculadora.calcularError(xCalcular, funcionReal);
-                mensaje += `<br>Error relativo: ${error.toFixed(4)}%`;
-            } catch (e) {
-                mensaje += `<br><span style="color: red;">Error al evaluar la función real: ${e.message}</span>`;
-            }
-        }
-        
-        actualizarResultados(mensaje);
-        grafico.actualizarGrafico(calculadora.puntos, xCalcular, yInterpolado);
-    } catch (e) {
-        actualizarResultados(e.message, true);
-    }
-});
-
-document.getElementById('limpiar-btn').addEventListener('click', function() {
-    calculadora.puntos = [];
-    actualizarTablaPuntos();
-    grafico.actualizarGrafico(calculadora.puntos);
-    actualizarEstadoCalculo();
-    actualizarResultados('Todos los puntos han sido eliminados.');
-});
-
-document.getElementById('exportar-btn').addEventListener('click', function() {
-    if (calculadora.puntos.length === 0) {
-        actualizarResultados('No hay datos para exportar', true);
-        return;
-    }
-    
-    const csv = calculadora.exportarCSV();
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'datos_interpolacion.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-});
-
-document.getElementById('toggle-funcion-btn').addEventListener('click', function() {
-    const container = document.getElementById('funcion-real-container');
-    if (container.style.display === 'none') {
-        container.style.display = 'block';
-        this.textContent = '- Función Real';
+// Function to set visibility of input groups
+function showInputGroup(groupToShow) {
+  [linearInputs, lagrangeInputs, newtonInputs].forEach(group => {
+    if (group === groupToShow) {
+      group.classList.add('active');
+      group.setAttribute('aria-hidden', 'false');
     } else {
-        container.style.display = 'none';
-        this.textContent = '+ Función Real';
+      group.classList.remove('active');
+      group.setAttribute('aria-hidden', 'true');
     }
+  });
+}
+
+// Initialize ARIA hidden attributes
+showInputGroup(linearInputs);
+
+calcButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    calcButtons.forEach(btn => {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-pressed', 'false');
+    });
+    button.classList.add('active');
+    button.setAttribute('aria-pressed', 'true');
+
+    // Show/hide input sections based on selected method
+    if (button.textContent.trim() === 'Lineal') {
+      showInputGroup(linearInputs);
+      clearResults();
+    } else if (button.textContent.trim() === 'Lagrange') {
+      showInputGroup(lagrangeInputs);
+      clearResults();
+    } else if (button.textContent.trim() === 'Newton-Raphson') {
+      showInputGroup(newtonInputs);
+      clearResults();
+    }
+  });
 });
 
-// Inicialización
-actualizarEstadoCalculo();
+// Clear result texts
+function clearResults() {
+  document.getElementById('linearResult').textContent = '';
+  document.getElementById('lagrangeResult').textContent = '';
+  document.getElementById('newtonResult').textContent = '';
+}
+
+// Linear Interpolation Calculation
+document.getElementById('calculateLinear').addEventListener('click', () => {
+  const x1 = parseFloat(document.getElementById('x1').value);
+  const y1 = parseFloat(document.getElementById('y1').value);
+  const x2 = parseFloat(document.getElementById('x2').value);
+  const y2 = parseFloat(document.getElementById('y2').value);
+  const x = parseFloat(document.getElementById('x').value);
+  const resultEl = document.getElementById('linearResult');
+
+  if ([x1, y1, x2, y2, x].some(val => isNaN(val))) {
+    resultEl.textContent = 'Por favor, ingrese valores válidos.';
+    return;
+  }
+  if (x2 === x1) {
+    resultEl.textContent = 'Error: x1 y x2 no pueden ser iguales (división entre cero).';
+    return;
+  }
+  const result = y1 + ((y2 - y1) / (x2 - x1)) * (x - x1);
+  resultEl.textContent = `Resultado: ${result}`;
+});
+
+// Lagrange Interpolation Calculation
+document.getElementById('calculateLagrange').addEventListener('click', () => {
+  const pointsInput = document.getElementById('points').value;
+  const xLagrange = parseFloat(document.getElementById('xLagrange').value);
+  const resultEl = document.getElementById('lagrangeResult');
+
+  if (!pointsInput.trim() || isNaN(xLagrange)) {
+    resultEl.textContent = 'Por favor, ingrese valores válidos.';
+    return;
+  }
+
+  const points = pointsInput.split(';').map(point => {
+    const coords = point.trim().split(',');
+    if(coords.length !== 2) return null;
+    const x = parseFloat(coords[0]);
+    const y = parseFloat(coords[1]);
+    if (isNaN(x) || isNaN(y)) return null;
+    return { x, y };
+  });
+
+  if (points.some(p => p === null) || points.length === 0) {
+    resultEl.textContent = 'Error en el formato de puntos. Use: x1,y1; x2,y2; ...';
+    return;
+  }
+
+  // Compute Lagrange interpolation
+  let result = 0;
+  for (let i = 0; i < points.length; i++) {
+    let term = points[i].y;
+    for (let j = 0; j < points.length; j++) {
+      if (j !== i) {
+        if (points[i].x === points[j].x) {
+          resultEl.textContent = 'Error: valores x duplicados en los puntos.';
+          return;
+        }
+        term *= (xLagrange - points[j].x) / (points[i].x - points[j].x);
+      }
+    }
+    result += term;
+  }
+  resultEl.textContent = `Resultado: ${result}`;
+});
+
+// Newton-Raphson Calculation
+document.getElementById('calculateNewton').addEventListener('click', () => {
+  const funcStr = document.getElementById('function').value.trim();
+  const derivStr = document.getElementById('derivative').value.trim();
+  const initialGuess = parseFloat(document.getElementById('initialGuess').value);
+  const resultEl = document.getElementById('newtonResult');
+
+  if (!funcStr || !derivStr || isNaN(initialGuess)) {
+    resultEl.textContent = 'Por favor, ingrese valores válidos.';
+    return;
+  }
+
+  // Prepare safe function construction:
+  // Replace ^ with ** for exponentiation if user typed caret
+  const safeFuncStr = funcStr.replace(/\^/g, '**');
+  const safeDerivStr = derivStr.replace(/\^/g, '**');
+
+  let f, fPrime;
+
+  try {
+    f = new Function('x', `return ${safeFuncStr};`);
+    fPrime = new Function('x', `return ${safeDerivStr};`);
+  } catch (e) {
+    resultEl.textContent = 'Error en la función o derivada. Verifique la sintaxis.';
+    return;
+  }
+
+  let x0 = initialGuess;
+  let x1;
+  let maxIterations = 100;
+  let tolerance = 1e-7;
+  let iteration;
+
+  for (iteration = 0; iteration < maxIterations; iteration++) {
+    let fx0, fpx0;
+    try {
+      fx0 = f(x0);
+      fpx0 = fPrime(x0);
+    } catch (err) {
+      resultEl.textContent = 'Error al evaluar la función o derivada en x = ' + x0;
+      return;
+    }
+
+    if (fpx0 === 0) {
+      resultEl.textContent = 'La derivada es cero en x = ' + x0 + '. No se puede continuar.';
+      return;
+    }
+
+    x1 = x0 - fx0 / fpx0;
+    if (Math.abs(x1 - x0) < tolerance) {
+      resultEl.textContent = `Resultado: ${x1} (convergido en ${iteration + 1} iteraciones)`;
+      return;
+    }
+    x0 = x1;
+  }
+  resultEl.textContent = `No se logró converger después de ${maxIterations} iteraciones. Último valor: ${x1}`;
+});

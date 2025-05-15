@@ -1,98 +1,53 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Interpolación Lineal</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadora de Interpolación</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container mt-5">
-        <h1 class="text-center">Calculadora de Interpolación Lineal</h1>
-        
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        Ingreso de Datos
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="x-input" class="form-label">Valor X:</label>
-                            <input type="number" class="form-control" id="x-input" step="any">
-                        </div>
-                        <div class="mb-3">
-                            <label for="y-input" class="form-label">Valor Y:</label>
-                            <input type="number" class="form-control" id="y-input" step="any">
-                        </div>
-                        <button id="agregar-btn" class="btn btn-primary">Agregar Punto</button>
-                        <button id="limpiar-btn" class="btn btn-secondary ms-2">Limpiar Datos</button>
-                    </div>
-                </div>
+  <section class="calculator-section" id="calculator-section" aria-live="polite">
+    <h1>Calculadora de Interpolación</h1>
+    <p class="subtitle">Seleccione el método de interpolación</p>
+    <nav class="menu" role="navigation" aria-label="Menú de métodos de interpolación">
+      <button type="button" class="active" aria-pressed="true">Lineal</button>
+      <button type="button" aria-pressed="false">Lagrange</button>
+      <button type="button" aria-pressed="false">Newton-Raphson</button>
+    </nav>
 
-                <div class="card mt-3">
-                    <div class="card-header">
-                        Calcular Interpolación
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="x-calcular" class="form-label">Valor X a interpolar:</label>
-                            <input type="number" class="form-control" id="x-calcular" step="any">
-                        </div>
-                        <div class="mb-3" id="funcion-real-container" style="display: none;">
-                            <label for="funcion-real" class="form-label">Función real (opcional):</label>
-                            <input type="text" class="form-control" id="funcion-real" placeholder="Ej: Math.sin(x)">
-                        </div>
-                        <button id="calcular-btn" class="btn btn-success">Calcular</button>
-                        <button id="toggle-funcion-btn" class="btn btn-outline-secondary ms-2">+ Función Real</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        Resultados
-                    </div>
-                    <div class="card-body">
-                        <div id="resultados">
-                            <p>Ingrese al menos dos puntos para comenzar.</p>
-                        </div>
-                        <canvas id="grafico"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row mt-3">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        Puntos Ingresados
-                    </div>
-                    <div class="card-body">
-                        <table class="table" id="tabla-puntos">
-                            <thead>
-                                <tr>
-                                    <th>X</th>
-                                    <th>Y</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="puntos-body">
-                                <!-- Puntos se agregarán aquí dinámicamente -->
-                            </tbody>
-                        </table>
-                        <button id="exportar-btn" class="btn btn-info">Exportar a CSV</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Linear Interpolation Inputs -->
+    <div id="linearInputs" class="input-group active">
+      <h2>Interpolación Lineal</h2>
+      <input type="number" id="x1" placeholder="x1" />
+      <input type="number" id="y1" placeholder="y1" />
+      <input type="number" id="x2" placeholder="x2" />
+      <input type="number" id="y2" placeholder="y2" />
+      <input type="number" id="x" placeholder="Valor de x a interpolar" />
+      <button id="calculateLinear" aria-label="Calcular interpolación lineal">Calcular</button>
+      <div class="result" id="linearResult" aria-live="polite"></div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
-    <script src="graficos.js"></script>
+    <!-- Lagrange Interpolation Inputs -->
+    <div id="lagrangeInputs" class="input-group">
+      <h2>Método de Lagrange</h2>
+      <input type="text" id="points" placeholder="Puntos (x1,y1; x2,y2; ...)" aria-label="Puntos para interpolación de Lagrange" />
+      <input type="number" id="xLagrange" placeholder="Valor de x a interpolar" aria-label="Valor de x para interpolar en Lagrange" />
+      <button id="calculateLagrange" aria-label="Calcular interpolación de Lagrange">Calcular</button>
+      <div class="result" id="lagrangeResult" aria-live="polite"></div>
+    </div>
+
+    <!-- Newton-Raphson Inputs -->
+    <div id="newtonInputs" class="input-group">
+      <h2>Método de Newton-Raphson</h2>
+      <input type="text" id="function" placeholder="Función (ej: x*x-4)" aria-label="Función para método Newton-Raphson" />
+      <input type="text" id="derivative" placeholder="Derivada (ej: 2*x)" aria-label="Derivada para método Newton-Raphson" />
+      <input type="number" id="initialGuess" placeholder="Valor inicial" aria-label="Valor inicial para Newton-Raphson" />
+      <button id="calculateNewton" aria-label="Calcular método Newton-Raphson">Calcular</button>
+      <div class="result" id="newtonResult" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <script src="scripts.js"></script>
 </body>
 </html>
